@@ -4,7 +4,7 @@ pipeline {
     tools {
         nodejs 'Node_24' // Nombre definido en Administrar Jenkins > Tools
     }
-
+    // Definición de pasos stages
     stages {
         // Etapa 1: Checkout del código desde GitHub
         stage('Checkout') {
@@ -17,7 +17,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm install'
-                sh 'npm run build'
+                sh 'npm run build' // Ejecuta el build de React
             }
         }
 
@@ -28,13 +28,14 @@ pipeline {
             }
             post {
                 always {
-                    junit 'junit.xml'
+                    junit 'junit.xml' // Publica el reporte en Jenkins (pestaña Test Result)
                     archiveArtifacts artifacts: 'junit.xml', allowEmptyArchive: true
                 }
             }
         }
     }
 
+    // Post-actions
     post {
         success {
             echo '¡Pipeline ejecutado con éxito!'
