@@ -84,7 +84,7 @@ pipeline {
                     Detalles de Pruebas: ${env.BUILD_URL}testReport/
                     SonarQube: http://localhost:9000/dashboard?id=ucp-app-react
                 """,
-                to: 'tu-correo@gmail.com'
+                to: 'javargasp26@gmail.com'
             )
         }
     }
