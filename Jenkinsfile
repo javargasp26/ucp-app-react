@@ -65,6 +65,46 @@ pipeline {
                 }
             }
         }
+                // Etapa 6: Análisis de seguridad de dependencias con Snyk
+        stage('Security Scan with Snyk') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'SNYK_API_TOKEN', variable: 'SNYK_TOKEN')]) {
+                        // Instalar el CLI de Snyk y el generador de reporte HTML
+                        sh 'npm install -g snyk snyk-to-html'
+
+                        // Escaneo: 0 = sin vulnerabilidades altas/críticas, 1 = encontró, 2+ = error
+                        def rc = sh(
+                            script: 'snyk test --all-projects --severity-threshold=high --json-file-output=snyk_results.json',
+                            returnStatus: true
+                        )
+
+                        // Reporte HTML y registro del proyecto en el dashboard de Snyk
+                        sh 'snyk-to-html -i snyk_results.json -o snyk_report.html || true'
+                        sh 'snyk monitor --all-projects || true'
+
+                        publishHTML target: [
+                            allowMissing: true,
+                            alwaysLinkToLastBuild: true,
+                            keepAll: true,
+                            reportDir: '.',
+                            reportFiles: 'snyk_report.html',
+                            reportName: 'Snyk Security Report'
+                        ]
+
+                        if (rc == 1) {
+                            echo 'Snyk encontró vulnerabilidades altas o críticas. Build marcado como UNSTABLE.'
+                            currentBuild.result = 'UNSTABLE'
+                        } else if (rc > 1) {
+                            echo "Snyk no pudo completar el escaneo (código ${rc})."
+                            currentBuild.result = 'UNSTABLE'
+                        } else {
+                            echo 'Snyk: sin vulnerabilidades altas o críticas.'
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Post-actions
